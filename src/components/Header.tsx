@@ -22,8 +22,8 @@ const StyledLink = styled(Link)(({ theme }) => ({
 const Header: FC = () => {
   return (
     <HeaderBox>
-      <StyledLink to={"/forms"}>Form Constructor</StyledLink>
-      <StyledLink to={"/kanban"}>Kanban</StyledLink>
+      <StyledLink to={"/forms"}>Go to Form Constructor</StyledLink>
+      <StyledLink to={"/kanban"}>Go to Kanban</StyledLink>
     </HeaderBox>
   );
 };
