@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router";
 import FormConstructor from "../pages/FormConstructor";
-import Kanban from "../pages/Kanban";
+import Board from "../pages/Kanban";
 import App from "../pages/App";
 
 const router = createBrowserRouter([
@@ -13,8 +13,8 @@ const router = createBrowserRouter([
         element: <FormConstructor />,
       },
       {
-        path: "/kanban",
-        element: <Kanban />,
+        path: "/board",
+        element: <Board />,
       },
     ],
   },

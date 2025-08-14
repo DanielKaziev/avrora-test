@@ -1,5 +1,5 @@
-function Kanban() {
+function Board() {
   return <>Kanban</>;
 }
 
-export default Kanban;
+export default Board;

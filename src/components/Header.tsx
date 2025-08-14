@@ -23,7 +23,7 @@ const Header: FC = () => {
   return (
     <HeaderBox>
       <StyledLink to={"/forms"}>Go to Form Constructor</StyledLink>
-      <StyledLink to={"/kanban"}>Go to Kanban</StyledLink>
+      <StyledLink to={"/board"}>Go to Board</StyledLink>
     </HeaderBox>
   );
 };
