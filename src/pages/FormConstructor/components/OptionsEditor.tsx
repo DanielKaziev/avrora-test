@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { Stack, TextField, IconButton, Button } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -8,39 +9,29 @@ interface OptionsEditorProps {
   fieldIndex: number;
 }
 
-export function OptionsEditor({ fieldIndex }: OptionsEditorProps) {
+export const OptionsEditor = memo(({ fieldIndex }: OptionsEditorProps) => {
   const {
     control,
     register,
     formState: { errors },
   } = useFormContext<IFormData>();
 
-  const {
-    fields: optionFields,
-    append: appendOption,
-    remove: removeOption,
-  } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: `fields.${fieldIndex}.options` as const,
   });
 
   return (
     <Stack spacing={1}>
-      {optionFields.map((opt, optIndex) => (
+      {fields.map((opt, optIndex) => (
         <Stack key={opt.id} direction="row" spacing={1}>
           <TextField
             label="Название"
-            {...register(
-              `fields.${fieldIndex}.options.${optIndex}.name` as const,
-              {
-                required: {
-                  value: true,
-                  message: "Поле обязательно для заполнения",
-                },
-                maxLength: { value: 64, message: "Максимум 64 символов" },
-                minLength: { value: 2, message: "Минимум 2 символа" },
-              },
-            )}
+            {...register(`fields.${fieldIndex}.options.${optIndex}.name`, {
+              required: "Поле обязательно",
+              maxLength: { value: 64, message: "Максимум 64 символа" },
+              minLength: { value: 2, message: "Минимум 2 символа" },
+            })}
             error={!!errors?.fields?.[fieldIndex]?.options?.[optIndex]?.name}
             helperText={
               errors?.fields?.[fieldIndex]?.options?.[optIndex]?.name?.message
@@ -50,17 +41,11 @@ export function OptionsEditor({ fieldIndex }: OptionsEditorProps) {
           />
           <TextField
             label="Значение"
-            {...register(
-              `fields.${fieldIndex}.options.${optIndex}.value` as const,
-              {
-                required: {
-                  value: true,
-                  message: "Поле обязательно для заполнения",
-                },
-                maxLength: { value: 64, message: "Максимум 64 символов" },
-                minLength: { value: 2, message: "Минимум 2 символа" },
-              },
-            )}
+            {...register(`fields.${fieldIndex}.options.${optIndex}.value`, {
+              required: "Поле обязательно",
+              maxLength: { value: 64, message: "Максимум 64 символа" },
+              minLength: { value: 2, message: "Минимум 2 символа" },
+            })}
             error={!!errors?.fields?.[fieldIndex]?.options?.[optIndex]?.value}
             helperText={
               errors?.fields?.[fieldIndex]?.options?.[optIndex]?.value?.message
@@ -70,7 +55,7 @@ export function OptionsEditor({ fieldIndex }: OptionsEditorProps) {
           />
           <IconButton
             color="error"
-            onClick={() => removeOption(optIndex)}
+            onClick={() => remove(optIndex)}
             size="small"
           >
             <DeleteIcon fontSize="small" />
@@ -81,10 +66,11 @@ export function OptionsEditor({ fieldIndex }: OptionsEditorProps) {
         variant="outlined"
         size="small"
         startIcon={<AddIcon />}
-        onClick={() => appendOption({ name: "", value: "" })}
+        onClick={() => append({ name: "", value: "" })}
       >
         Добавить вариант
       </Button>
     </Stack>
   );
-}
+});
+OptionsEditor.displayName = "OptionsEditor";
