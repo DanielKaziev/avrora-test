@@ -24,7 +24,7 @@ export const OptionsEditor = memo(({ fieldIndex }: OptionsEditorProps) => {
   return (
     <Stack spacing={1}>
       {fields.map((opt, optIndex) => (
-        <Stack key={opt.id} direction="row" spacing={1}>
+        <Stack key={opt.id} direction="row" alignItems="center" spacing={1}>
           <TextField
             label="Название"
             {...register(`fields.${fieldIndex}.options.${optIndex}.name`, {
