@@ -1,69 +1,75 @@
-# React + TypeScript + Vite
+# Краткое архитектурное обоснование
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Проект построен на основе **React + TypeScript**, использует модульную структуру с разделением по функциональным областям. Код организован так, чтобы каждая часть приложения была изолирована и легко расширялась.
 
-Currently, two official plugins are available:
+##### Комментарий 1
+Техническое задание было выполнено за 6–8 часов из предоставленных двух дней. К сожалению, больше времени уделить не смог. В перспективе я бы вынес повторяющиеся инпуты, встречающиеся в обоих заданиях, в отдельный компонент. Также планировалось добавить определённые валидаторы для полей в конструкторе форм (например, минимальная и максимальная длина строки, которые может задавать пользователь).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+В доске стоит стандартизировать модальное окно и переиспользовать его также для создания карточек. Мне также хотелось бы добавить порядок карточек в структуру, чтобы при импорте сохранялась их очередность.
 
-## Expanding the ESLint configuration
+С drag-and-drop я работал второй раз, поэтому частично брал решения из примеров, шаблонов и GPT. Из-за этого код может показаться местами нестандартным.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+##### Комментарий 2
+По библиотекам: за основу для визуала был выбран MUI, так как я много с ним работал ранее. react-hook-form также выбрал из за опыта и по началу в голове выстраил более сложную структуру форм. @dnd-kit/core и @dnd-kit/sortable выбрал, поскольку они являются одними из самых стабильных решений с активной поддержкой сообщества.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Структура проекта
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+src/
+│ main.tsx # Точка входа в приложение, подключение React к DOM
+│ theme.ts # Глобальная MUI-тема и стилизация
+│ vite-env.d.ts # Типы окружения Vite
+│
+├───components
+│ Header.tsx # Общий компонент шапки, используется на разных страницах
+│
+├───pages # Страницы приложения
+│ ├───App
+│ │ index.tsx # Корневой контейнер приложения, объединяет маршруты
+│ │
+│ ├───Board # Страница с интерактивной доской карточек
+│ │ │ index.tsx # Логика отображения и управления доской
+│ │ │
+│ │ └───components
+│ │ CardForm.tsx # Форма создания новой карточки
+│ │ EditDialog.tsx # Модальное окно редактирования карточки
+│ │ SortableCard.tsx# Отдельная карточка с поддержкой drag-and-drop
+│ │
+│ └───FormConstructor # Страница конструктора форм
+│ │ index.tsx # Логика конструктора, управление состоянием формы
+│ │
+│ └───components
+│ FieldCard.tsx # Отдельное поле в конструкторе
+│ OptionsEditor.tsx # Редактор опций поля
+│
+├───router
+│ index.tsx # Конфигурация маршрутов приложения
+│
+└───types # Глобальные интерфейсы и типы
+board.ts # Типы данных для доски и карточек
+form.ts # Типы данных для конструктора форм
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Архитектурные решения
+
+1. **Разделение по страницам (pages)**  
+   Каждая страница имеет собственную папку, в которой хранится её `index.tsx` и внутренние компоненты (`components/`).  
+
+
+2. **Локальные и глобальные компоненты**  
+   - **`src/components`** хранит глобальные компоненты (например, `Header`), которые могут использоваться в нескольких местах.  
+   - Внутри каждой страницы есть своя папка `components` для специализированных элементов.
+
+3. **Типизация через `types/`**  
+   Все интерфейсы и типы вынесены в отдельную директорию.  
+
+4. **Маршрутизация**  
+   Все маршруты централизованы в `router/index.tsx`.
+
+5. **UI и тема**  
+   В `theme.ts` задаются глобальные стили и тема для MUI.
+
+---
