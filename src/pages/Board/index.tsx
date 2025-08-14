@@ -21,10 +21,14 @@ import {
   Container,
   Stack,
   Paper,
-  Box,
   Button,
   MenuItem,
   TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  CardActions,
 } from "@mui/material";
 import type { ICard } from "../../types/board";
 import BeenhereIcon from "@mui/icons-material/Beenhere";
@@ -39,11 +43,18 @@ const typeToIcon: Record<ICard["icon"], JSX.Element> = {
   done: <BeenhereIcon fontSize="medium" color="success" />,
 };
 
-export const SortableCard: React.FC<ICard> = ({
+interface SortableCardProps extends ICard {
+  onEdit: (card: ICard) => void;
+  onDelete: (id: string) => void;
+}
+
+export const SortableCard: React.FC<SortableCardProps> = ({
   id,
   title,
   description,
   icon,
+  onEdit,
+  onDelete,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id });
@@ -58,8 +69,6 @@ export const SortableCard: React.FC<ICard> = ({
     <Card
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
       elevation={3}
       sx={{
         borderRadius: 2,
@@ -67,8 +76,7 @@ export const SortableCard: React.FC<ICard> = ({
         "&:hover": { boxShadow: 6 },
       }}
     >
-      <CardContent sx={{ p: 2 }}>
-        {/* Верхняя строка: Название + Иконка */}
+      <CardContent sx={{ p: 2 }} {...attributes} {...listeners}>
         <Stack
           direction="row"
           alignItems="center"
@@ -80,18 +88,18 @@ export const SortableCard: React.FC<ICard> = ({
           {typeToIcon[icon]}
         </Stack>
 
-        {/* Описание */}
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {description}
         </Typography>
-
-        {/* Кнопки */}
-        <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+      </CardContent>
+      <CardActions>
+        <Stack direction="row" spacing={2} sx={{ flexGrow: 1 }}>
           <Button
             variant="outlined"
             size="small"
+            fullWidth
             startIcon={<EditIcon />}
-            onClick={() => console.log("Редактировать", id)}
+            onClick={() => onEdit({ id, title, description, icon })}
           >
             Редактировать
           </Button>
@@ -99,13 +107,14 @@ export const SortableCard: React.FC<ICard> = ({
             variant="outlined"
             color="error"
             size="small"
+            fullWidth
             startIcon={<DeleteIcon />}
-            onClick={() => console.log("Удалить", id)}
+            onClick={() => onDelete(id)}
           >
             Удалить
           </Button>
-        </Box>
-      </CardContent>
+        </Stack>
+      </CardActions>
     </Card>
   );
 };
@@ -128,6 +137,8 @@ export default function Board() {
     icon: "created",
   });
 
+  const [editCard, setEditCard] = useState<ICard | null>(null);
+
   const sensors = useSensors(useSensor(PointerSensor));
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -145,6 +156,18 @@ export default function Board() {
     if (!newCard.title.trim()) return;
     setCards((prev) => [...prev, { id: Date.now().toString(), ...newCard }]);
     setNewCard({ title: "", description: "", icon: "created" });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    setCards((prev) => prev.filter((card) => card.id !== id));
+  };
+
+  const handleSaveEdit = () => {
+    if (!editCard) return;
+    setCards((prev) =>
+      prev.map((card) => (card.id === editCard.id ? editCard : card)),
+    );
+    setEditCard(null);
   };
 
   const handleExport = () => {
@@ -203,7 +226,6 @@ export default function Board() {
         </Stack>
 
         <Stack justifyContent="space-between" spacing={5} direction="row">
-          {/* Карточки */}
           <Stack flexGrow={1}>
             <DndContext
               sensors={sensors}
@@ -218,10 +240,9 @@ export default function Board() {
                   {cards.map((card) => (
                     <SortableCard
                       key={card.id}
-                      id={card.id}
-                      title={card.title}
-                      description={card.description}
-                      icon={card.icon}
+                      {...card}
+                      onEdit={(card) => setEditCard(card)}
+                      onDelete={handleDeleteCard}
                     />
                   ))}
                 </Stack>
@@ -229,7 +250,6 @@ export default function Board() {
             </DndContext>
           </Stack>
 
-          {/* Форма создания карточки */}
           <Stack flexGrow={1}>
             <Paper sx={{ p: 2 }} elevation={2}>
               <Stack spacing={2}>
@@ -283,6 +303,60 @@ export default function Board() {
           </Stack>
         </Stack>
       </Paper>
+
+      {/* Диалог редактирования */}
+      <Dialog open={!!editCard} onClose={() => setEditCard(null)}>
+        <DialogTitle>Редактировать карточку</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} mt={1}>
+            <TextField
+              label="Название"
+              value={editCard?.title || ""}
+              onChange={(e) =>
+                setEditCard((prev) =>
+                  prev ? { ...prev, title: e.target.value } : prev,
+                )
+              }
+              fullWidth
+            />
+            <TextField
+              label="Описание"
+              value={editCard?.description || ""}
+              onChange={(e) =>
+                setEditCard((prev) =>
+                  prev ? { ...prev, description: e.target.value } : prev,
+                )
+              }
+              fullWidth
+              multiline
+              rows={2}
+            />
+            <TextField
+              select
+              label="Тип"
+              value={editCard?.icon || "created"}
+              onChange={(e) =>
+                setEditCard((prev) =>
+                  prev
+                    ? { ...prev, icon: e.target.value as ICard["icon"] }
+                    : prev,
+                )
+              }
+              fullWidth
+            >
+              <MenuItem value="created">Создано</MenuItem>
+              <MenuItem value="inProgress">В работе</MenuItem>
+              <MenuItem value="done">Готово</MenuItem>
+            </TextField>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditCard(null)}>Отмена</Button>
+          <Button variant="contained" onClick={handleSaveEdit}>
+            Сохранить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
